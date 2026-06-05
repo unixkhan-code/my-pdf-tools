@@ -1,17 +1,20 @@
-<h1>Mera PDF Converter Ready Hai!</h1>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Merge PDF Tool</title>
+    <title>PDF Tools Suite</title>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
-        body { font-family: Arial; padding: 20px; text-align: center; }
-        .box { border: 2px solid #333; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
+        body { font-family: sans-serif; padding: 30px; text-align: center; background-color: #f4f7f6; }
+        .box { border: 2px solid #2c3e50; padding: 25px; border-radius: 12px; max-width: 450px; margin: auto; background: white; }
+        h2 { color: #2c3e50; }
+        button { background: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #218838; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2>Merge PDF Tool</h2>
+        <p>Apni 2 files select karein:</p>
         <input type="file" id="pdf1" accept="application/pdf"><br><br>
         <input type="file" id="pdf2" accept="application/pdf"><br><br>
         <button onclick="mergePDFs()">Merge & Download</button>
@@ -23,19 +26,23 @@
             const pdfDoc = await PDFDocument.create();
             const files = [document.getElementById('pdf1').files[0], document.getElementById('pdf2').files[0]];
             
+            let hasFile = false;
             for (let file of files) {
                 if(!file) continue;
+                hasFile = true;
                 const arrayBuffer = await file.arrayBuffer();
                 const donorPdfDoc = await PDFDocument.load(arrayBuffer);
                 const copiedPages = await pdfDoc.copyPages(donorPdfDoc, donorPdfDoc.getPageIndices());
                 copiedPages.forEach((page) => pdfDoc.addPage(page));
             }
             
+            if (!hasFile) { alert("Please select at least one file!"); return; }
+            
             const mergedPdfBytes = await pdfDoc.save();
             const blob = new Blob([mergedPdfBytes], {type: 'application/pdf'});
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Merged.pdf';
+            link.download = 'Merged_PDF.pdf';
             link.click();
         }
     </script>
