@@ -7,34 +7,44 @@
         body { font-family: sans-serif; text-align: center; background: #f4f7f6; padding: 20px; }
         .nav { margin-bottom: 20px; }
         .box { border: 2px solid #2c3e50; padding: 25px; border-radius: 12px; max-width: 500px; margin: auto; background: white; }
-        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; margin: 5px; }
     </style>
 </head>
 <body>
     <div class="nav">
-        <button onclick="showTool('merge')">Merge PDF</button>
-        <button onclick="showTool('split')">Split PDF</button>
+        <button onclick="showMerge()">Merge PDF</button>
+        <button onclick="showSplit()">Split PDF</button>
     </div>
 
     <div id="tool-container" class="box">
         <h2>Welcome to I Like PDF Converter</h2>
-        <p>Select a tool from the top menu.</p>
+        <p>Select a tool from the menu above.</p>
     </div>
 
     <script>
-        function showTool(tool) {
-            const container = document.getElementById('tool-container');
-            if (tool === 'merge') {
-                container.innerHTML = '<h2>Merge PDF</h2><input type="file" id="m1" multiple><br><br><button onclick="processMerge()">Merge</button>';
-            } else if (tool === 'split') {
-                container.innerHTML = '<h2>Split PDF</h2><input type="file" id="s1"><br><br><button onclick="processSplit()">Split (First Page)</button>';
-            }
+        // --- UI Logic ---
+        function showMerge() {
+            document.getElementById('tool-container').innerHTML = `
+                <h2>Merge Multiple PDFs</h2>
+                <input type="file" id="mFiles" multiple accept="application/pdf"><br><br>
+                <button onclick="processMerge()">Merge All Files</button>`;
         }
 
+        function showSplit() {
+            document.getElementById('tool-container').innerHTML = `
+                <h2>Split PDF</h2>
+                <input type="file" id="sFile" accept="application/pdf" onchange="countPages()"><br>
+                <p id="pageCount"></p>
+                <input type="number" id="pageNumber" placeholder="Enter page number to extract" style="display:none"><br><br>
+                <button id="splitBtn" onclick="processSplit()" style="display:none">Extract Page</button>`;
+        }
+
+        // --- Merge Logic ---
         async function processMerge() {
             const { PDFDocument } = PDFLib;
             const pdfDoc = await PDFDocument.create();
-            const files = document.getElementById('m1').files;
+            const files = document.getElementById('mFiles').files;
+            
             for (let file of files) {
                 const arr = await file.arrayBuffer();
                 const d = await PDFDocument.load(arr);
@@ -42,26 +52,40 @@
                 pages.forEach(p => pdfDoc.addPage(p));
             }
             const bytes = await pdfDoc.save();
-            const blob = new Blob([bytes], {type: 'application/pdf'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Merged.pdf';
-            link.click();
+            downloadFile(bytes, "Merged_PDF.pdf");
+        }
+
+        // --- Split Logic ---
+        async function countPages() {
+            const { PDFDocument } = PDFLib;
+            const file = document.getElementById('sFile').files[0];
+            const arr = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arr);
+            const count = pdfDoc.getPageCount();
+            document.getElementById('pageCount').innerText = "Total Pages: " + count;
+            document.getElementById('pageNumber').style.display = "inline";
+            document.getElementById('splitBtn').style.display = "inline";
         }
 
         async function processSplit() {
             const { PDFDocument } = PDFLib;
-            const file = document.getElementById('s1').files[0];
+            const file = document.getElementById('sFile').files[0];
+            const pageNum = parseInt(document.getElementById('pageNumber').value) - 1;
             const arr = await file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(arr);
+            
             const newDoc = await PDFDocument.create();
-            const [page] = await newDoc.copyPages(pdfDoc, [0]);
+            const [page] = await newDoc.copyPages(pdfDoc, [pageNum]);
             newDoc.addPage(page);
             const bytes = await newDoc.save();
+            downloadFile(bytes, "Split_Page_" + (pageNum + 1) + ".pdf");
+        }
+
+        function downloadFile(bytes, name) {
             const blob = new Blob([bytes], {type: 'application/pdf'});
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Split_Page_1.pdf';
+            link.download = name;
             link.click();
         }
     </script>
