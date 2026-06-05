@@ -2,23 +2,28 @@
 <html>
 <head>
     <title>I Like PDF Converter</title>
+    <!-- PDF-LIB library -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f7f6; padding: 20px; }
-        .nav { margin-bottom: 20px; }
-        .box { border: 2px solid #2c3e50; padding: 25px; border-radius: 12px; max-width: 500px; margin: auto; background: white; }
-        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; margin: 5px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f7f6; padding: 20px; }
+        .nav { margin-bottom: 30px; }
+        .box { border: 2px solid #2c3e50; padding: 30px; border-radius: 15px; max-width: 500px; margin: auto; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        button { background: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; margin: 5px; transition: 0.3s; }
+        button:hover { background: #218838; }
+        input { padding: 10px; margin: 5px; border: 1px solid #ccc; border-radius: 5px; }
     </style>
 </head>
 <body>
+
     <div class="nav">
+        <h1>I Like PDF Converter</h1>
         <button onclick="showMerge()">Merge PDF</button>
         <button onclick="showSplit()">Split PDF</button>
     </div>
 
     <div id="tool-container" class="box">
-        <h2>Welcome to I Like PDF Converter</h2>
-        <p>Select a tool from the menu above.</p>
+        <h2>Welcome</h2>
+        <p>Select a tool from the menu above to get started.</p>
     </div>
 
     <script>
@@ -26,6 +31,7 @@
         function showMerge() {
             document.getElementById('tool-container').innerHTML = `
                 <h2>Merge Multiple PDFs</h2>
+                <p>Select multiple files (Hold Ctrl/Shift):</p>
                 <input type="file" id="mFiles" multiple accept="application/pdf"><br><br>
                 <button onclick="processMerge()">Merge All Files</button>`;
         }
@@ -33,9 +39,12 @@
         function showSplit() {
             document.getElementById('tool-container').innerHTML = `
                 <h2>Split PDF</h2>
-                <input type="file" id="sFile" accept="application/pdf" onchange="countPages()"><br>
-                <p id="pageCount"></p>
-                <input type="number" id="pageNumber" placeholder="Enter page number to extract" style="display:none"><br><br>
+                <p>Upload your PDF file:</p>
+                <input type="file" id="sFile" accept="application/pdf" onchange="countPages()">
+                <br><br>
+                <p id="pageCount" style="font-weight:bold; color: #2c3e50;"></p>
+                <input type="number" id="pageNumber" placeholder="Enter page number" style="display:none; width: 150px;">
+                <br><br>
                 <button id="splitBtn" onclick="processSplit()" style="display:none">Extract Page</button>`;
         }
 
@@ -44,6 +53,8 @@
             const { PDFDocument } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             const files = document.getElementById('mFiles').files;
+            
+            if (files.length === 0) { alert("Please select files first!"); return; }
             
             for (let file of files) {
                 const arr = await file.arrayBuffer();
@@ -58,12 +69,17 @@
         // --- Split Logic ---
         async function countPages() {
             const { PDFDocument } = PDFLib;
-            const file = document.getElementById('sFile').files[0];
+            const fileInput = document.getElementById('sFile');
+            if (fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
             const arr = await file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(arr);
             const count = pdfDoc.getPageCount();
-            document.getElementById('pageCount').innerText = "Total Pages: " + count;
+            
+            document.getElementById('pageCount').innerText = "Total Pages in PDF: " + count;
             document.getElementById('pageNumber').style.display = "inline";
+            document.getElementById('pageNumber').setAttribute("max", count);
             document.getElementById('splitBtn').style.display = "inline";
         }
 
@@ -73,6 +89,11 @@
             const pageNum = parseInt(document.getElementById('pageNumber').value) - 1;
             const arr = await file.arrayBuffer();
             const pdfDoc = await PDFDocument.load(arr);
+            
+            if (pageNum < 0 || pageNum >= pdfDoc.getPageCount()) {
+                alert("Invalid page number!");
+                return;
+            }
             
             const newDoc = await PDFDocument.create();
             const [page] = await newDoc.copyPages(pdfDoc, [pageNum]);
