@@ -169,6 +169,17 @@ function downloadFile(bytes, name) {
     link.download = name;
     link.click();
 }
+    // ... keep all your existing functions exactly the same (processMerge, processSplit, etc.) ...
+
+// ADD THIS AT THE VERY BOTTOM OF YOUR SCRIPT:
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tool = urlParams.get('tool');
+    if (tool) {
+        showTool(tool);
+    }
+};
+</script>
 </script>
 </body>
 </html>
