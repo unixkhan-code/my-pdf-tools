@@ -10,6 +10,13 @@
         button { background: #28a745; color: white; border: none; padding: 12px 20px; cursor: pointer; border-radius: 5px; font-size: 16px; margin: 5px; }
         button:hover { background: #218838; }
         input { padding: 10px; margin: 5px; }
+        
+        /* New styling for the Quick Guide Container */
+        .guide-box { border: 1px dashed #7f8c8d; padding: 20px; border-radius: 12px; max-width: 500px; margin: 20px auto 0 auto; background: #fdfefe; text-align: left; box-shadow: 0px 2px 5px rgba(0,0,0,0.05); }
+        .guide-box h3 { margin-top: 0; color: #2c3e50; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .guide-box ul { margin: 0; padding-left: 20px; color: #555; font-size: 14px; }
+        .guide-box li { margin-bottom: 8px; }
+        .badge { background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -26,20 +33,58 @@
         <p>Select a tool to get started.</p>
     </div>
 
+    <div id="guide-container" class="guide-box">
+        <h3>💡 How to get started:</h3>
+        <ul>
+            <li>Select one of our free tools from the buttons above (**Merge**, **Split**, or **Compress**).</li>
+            <li>All processing happens securely directly inside your browser—your files are never uploaded to a cloud server!</li>
+        </ul>
+    </div>
+
 <script>
 function showTool(tool) {
     const container = document.getElementById('tool-container');
+    const guideContainer = document.getElementById('guide-container');
+    
     if (tool === 'merge') {
-        // Accepts both PDFs and common image files in the browser dialogue
         container.innerHTML = '<h2>Merge PDF & Images</h2><input type="file" id="mfiles" multiple accept="application/pdf, image/jpeg, image/png"><br><br><button onclick="processMerge()">Merge Documents</button>';
+        
+        // Update guide content for Merge
+        guideContainer.innerHTML = `
+            <h3>💡 Smart Merge Guide:</h3>
+            <ul>
+                <li><strong>One-Click Cross-Merging:</strong> You can select a mix of <span class="badge">.pdf</span>, <span class="badge">.jpg</span>, and <span class="badge">.png</span> files all at once.</li>
+                <li>Hold down <code>Ctrl</code> (Windows) or <code>Cmd</code> (Mac) to select multiple files in the window wrapper.</li>
+                <li>The system automatically transforms your standalone image dimensions into native PDF sheets instantly.</li>
+            </ul>`;
+            
     } else if (tool === 'split') {
         container.innerHTML = '<h2>Split PDF</h2><input type="file" id="sfile" accept="application/pdf" onchange="countPages()"><p id="pageCount" style="display:none;"></p><input type="number" id="pageNumber" placeholder="Page number to extract" min="1" style="display:none; width:80px;"><br><br><button id="splitBtn" onclick="processSplit()" style="display:none;">Split PDF</button>';
+        
+        // Update guide content for Split
+        guideContainer.innerHTML = `
+            <h3>💡 PDF Split Guide:</h3>
+            <ul>
+                <li>Select a multi-page PDF document to analyze.</li>
+                <li>The tool will instantly report the total page count available.</li>
+                <li>Enter the exact page number you want to isolate and extract, then click split to save it as a brand-new file.</li>
+            </ul>`;
+            
     } else if (tool === 'compress') {
         container.innerHTML = '<h2>Compress PDF</h2><p style="font-size:12px; color:gray;">Note: This optimizes structures and metadata streams.</p><input type="file" id="cfile" accept="application/pdf"><br><br><button onclick="processCompress()">Compress PDF</button>';
+        
+        // Update guide content for Compress
+        guideContainer.innerHTML = `
+            <h3>💡 Optimization Guide:</h3>
+            <ul>
+                <li>Drop large or unoptimized PDF files here.</li>
+                <li>The engine applies structural object stream reduction to strip out repetitive internal metadata layers.</li>
+                <li>Reduces data sizing footprints significantly while keeping formatting fonts and visual tables completely safe.</li>
+            </ul>`;
     }
 }
 
-// UPGRADED FEATURE: Robust browser-based cross-merging via file extension checks
+// Upgraded Merge Logic using File Extension Processing
 async function processMerge() {
     const { PDFDocument } = PDFLib;
     const pdfDoc = await PDFDocument.create();
