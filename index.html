@@ -30,7 +30,7 @@
 function showTool(tool) {
     const container = document.getElementById('tool-container');
     if (tool === 'merge') {
-        // CHANGED: Added accept image types alongside pdf
+        // Accepts both PDFs and common image files in the browser dialogue
         container.innerHTML = '<h2>Merge PDF & Images</h2><input type="file" id="mfiles" multiple accept="application/pdf, image/jpeg, image/png"><br><br><button onclick="processMerge()">Merge Documents</button>';
     } else if (tool === 'split') {
         container.innerHTML = '<h2>Split PDF</h2><input type="file" id="sfile" accept="application/pdf" onchange="countPages()"><p id="pageCount" style="display:none;"></p><input type="number" id="pageNumber" placeholder="Page number to extract" min="1" style="display:none; width:80px;"><br><br><button id="splitBtn" onclick="processSplit()" style="display:none;">Split PDF</button>';
@@ -39,35 +39,40 @@ function showTool(tool) {
     }
 }
 
-// UPGRADED FEATURE: Merges PDFs AND converts Images into PDF layers natively in-browser
+// UPGRADED FEATURE: Robust browser-based cross-merging via file extension checks
 async function processMerge() {
     const { PDFDocument } = PDFLib;
     const pdfDoc = await PDFDocument.create();
     const files = document.getElementById('mfiles').files;
 
-    if(files.length === 0) return alert("Please select files first!");
+    if (files.length === 0) return alert("Please select files first!");
 
     for (let file of files) {
         const arr = await file.arrayBuffer();
-        const fileType = file.type;
+        const fileName = file.name.toLowerCase();
 
-        if (fileType === "application/pdf") {
-            // Handle standard PDF files
-            const d = await PDFDocument.load(arr);
-            const pages = await pdfDoc.copyPages(d, d.getPageIndices());
-            pages.forEach(p => pdfDoc.addPage(p));
-        } 
-        else if (fileType === "image/jpeg" || fileType === "image/jpg") {
-            // Embed JPEG directly onto a custom sized page
-            const jpgImage = await pdfDoc.embedJpg(arr);
-            const page = pdfDoc.addPage([jpgImage.width, jpgImage.height]);
-            page.drawImage(jpgImage, { x: 0, y: 0, width: jpgImage.width, height: jpgImage.height });
-        } 
-        else if (fileType === "image/png") {
-            // Embed PNG directly onto a custom sized page
-            const pngImage = await pdfDoc.embedPng(arr);
-            const page = pdfDoc.addPage([pngImage.width, pngImage.height]);
-            page.drawImage(pngImage, { x: 0, y: 0, width: pngImage.width, height: pngImage.height });
+        try {
+            if (fileName.endsWith('.pdf')) {
+                const d = await PDFDocument.load(arr);
+                const pages = await pdfDoc.copyPages(d, d.getPageIndices());
+                pages.forEach(p => pdfDoc.addPage(p));
+            } 
+            else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+                const jpgImage = await pdfDoc.embedJpg(arr);
+                const page = pdfDoc.addPage([jpgImage.width, jpgImage.height]);
+                page.drawImage(jpgImage, { x: 0, y: 0, width: jpgImage.width, height: jpgImage.height });
+            } 
+            else if (fileName.endsWith('.png')) {
+                const pngImage = await pdfDoc.embedPng(arr);
+                const page = pdfDoc.addPage([pngImage.width, pngImage.height]);
+                page.drawImage(pngImage, { x: 0, y: 0, width: pngImage.width, height: pngImage.height });
+            }
+            else {
+                alert(`Skipping unsupported format: ${file.name}`);
+            }
+        } catch (error) {
+            console.error("Error processing file: " + file.name, error);
+            alert(`Could not process file "${file.name}". The asset layout or compression formatting might be unreadable.`);
         }
     }
 
@@ -108,7 +113,6 @@ async function processCompress() {
     const arr = await document.getElementById('cfile').files[0].arrayBuffer();
     const pdfDoc = await PDFDocument.load(arr);
     
-    // Uses structural stream reduction
     const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
     downloadFile(pdfBytes, "Compressed.pdf");
 }
