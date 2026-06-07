@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div class="nav">
+    <div id="main-navigation" class="nav">
         <h1>I Like PDF Converter</h1>
         <button onclick="showTool('merge')">Merge</button>
         <button onclick="showTool('split')">Split</button>
@@ -49,19 +49,17 @@ function showTool(tool) {
     if (tool === 'merge') {
         container.innerHTML = '<h2>Merge PDF & Images</h2><input type="file" id="mfiles" multiple accept="application/pdf, image/jpeg, image/png"><br><br><button onclick="processMerge()">Merge Documents</button>';
         
-        // Update guide content for Merge
         guideContainer.innerHTML = `
             <h3>💡 Smart Merge Guide:</h3>
             <ul>
                 <li><strong>One-Click Cross-Merging:</strong> You can select a mix of <span class="badge">.pdf</span>, <span class="badge">.jpg</span>, and <span class="badge">.png</span> files all at once.</li>
-                <li>Hold down <code>Ctrl</code> (Windows) or <code>Cmd</code> (Mac) to select multiple files in the window wrapper.</li>
+                <li>Hold down <code>Ctrl</code> (Windows) or <code>Cmd</code> (Mac) to select multiple files in the file upload window.</li>
                 <li>The system automatically transforms your standalone image dimensions into native PDF sheets instantly.</li>
             </ul>`;
             
     } else if (tool === 'split') {
-        container.innerHTML = '<h2>Split PDF</h2><input type="file" id="sfile" accept="application/pdf" onchange="countPages()"><p id="pageCount" style="display:none;"></p><input type="number" id="pageNumber" placeholder="Page number to extract" min="1" style="display:none; width:80px;"><br><br><button id="splitBtn" onclick="processSplit()" style="display:none;">Split PDF</button>';
+        container.innerHTML = '<h2>Split PDF</h2><input type="file" id="sfile" accept="application/pdf" onchange="countPages()"><p id="pageCount" style="display:none;"></p><br><input type="number" id="pageNumber" placeholder="Page number to extract" min="1" style="display:none; width:180px;"><br><br><button id="splitBtn" onclick="processSplit()" style="display:none;">Split PDF</button>';
         
-        // Update guide content for Split
         guideContainer.innerHTML = `
             <h3>💡 PDF Split Guide:</h3>
             <ul>
@@ -73,7 +71,6 @@ function showTool(tool) {
     } else if (tool === 'compress') {
         container.innerHTML = '<h2>Compress PDF</h2><p style="font-size:12px; color:gray;">Note: This optimizes structures and metadata streams.</p><input type="file" id="cfile" accept="application/pdf"><br><br><button onclick="processCompress()">Compress PDF</button>';
         
-        // Update guide content for Compress
         guideContainer.innerHTML = `
             <h3>💡 Optimization Guide:</h3>
             <ul>
@@ -169,17 +166,18 @@ function downloadFile(bytes, name) {
     link.download = name;
     link.click();
 }
-    // ... keep all your existing functions exactly the same (processMerge, processSplit, etc.) ...
 
-// ADD THIS AT THE VERY BOTTOM OF YOUR SCRIPT:
+// SMART URL DETECTOR: Automatically initializes specific tools and strips layout components
 window.onload = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const tool = urlParams.get('tool');
     if (tool) {
+        // Hide the top navbar menu so it looks like an exclusive page
+        document.getElementById('main-navigation').style.display = 'none';
+        // Open the dedicated configuration
         showTool(tool);
     }
 };
-</script>
 </script>
 </body>
 </html>
